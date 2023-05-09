@@ -1,0 +1,18 @@
+#-----------------
+# Versions
+#-----------------
+[versions]
+jdkVersion = "8"
+kotlin = "1.8.21"
+kotlin-dsl = "4.0.14"
+
+#-----------------
+# Libraries
+#-----------------
+[libraries]
+
+#-----------------
+# Plugins
+#-----------------
+[plugins]
+kotlin-dsl = { id = "org.gradle.kotlin.kotlin-dsl", version.ref = "kotlin-dsl" }
