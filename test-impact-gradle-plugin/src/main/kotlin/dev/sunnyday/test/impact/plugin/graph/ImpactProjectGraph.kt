@@ -1,7 +1,7 @@
 package dev.sunnyday.test.impact.plugin.graph
 
 internal class ImpactProjectGraph(
-    val roots: List<ImpactProject>,
+    val roots: Set<ImpactProject>,
     private val projects: Map<String, ImpactProject>,
     private val pathTrie: ProjectPathTrie,
 ) {

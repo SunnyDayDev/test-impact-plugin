@@ -25,16 +25,19 @@ class TestImpactPlugin : Plugin<Project> {
         while (projectsQueue.isNotEmpty()) {
             val project = projectsQueue.removeFirst()
             project.afterEvaluate {
+                val testImpactTask = testImpactTaskProvider.get()
+
+                testImpactTask.onProjectEvaluated(project)
+
                 if (
                     extension.unchangedProjectTestStrategy == UnchangedProjectTestStrategy.SKIP_COMPILE &&
-                    !testImpactTaskProvider.get().hasChanges(project)
+                    !testImpactTask.hasChanges(project)
                 ) {
                     return@afterEvaluate
                 }
 
                 extension.testTasksNames.forEach { testTask ->
-                    tasks.findByName(testTask)?.apply {
-                        val testImpactTask = testImpactTaskProvider.get()
+                    project.tasks.findByName(testTask)?.apply {
                         testImpactTask.finalizedBy("${project.name}:$testTask")
 
                         setOnlyIf { !testImpactTask.isRunned || testImpactTask.hasChanges(project) }

@@ -8,10 +8,10 @@ internal class ProjectGraphResolver(
     private val rootProject: Project,
 ) {
 
-    fun getProjectsGraph(): ImpactProjectGraph {
-        val projects = getProjectsMap()
+    private val projects by lazy { getProjectsMap() }
+    private val roots by lazy { projects.values.toMutableSet() }
 
-        val roots = buildProjectsGraph(projects.values)
+    fun getProjectsGraph(): ImpactProjectGraph {
         val pathTrie = buildProjectsPathTrie(projects.values)
 
         return ImpactProjectGraph(roots, projects, pathTrie)
@@ -21,6 +21,7 @@ internal class ProjectGraphResolver(
         return buildMap {
             val projectsQueue = ArrayDeque<Project>()
             projectsQueue.add(rootProject)
+
             while (projectsQueue.isNotEmpty()) {
                 val project = projectsQueue.removeFirst()
 
@@ -31,32 +32,31 @@ internal class ProjectGraphResolver(
         }
     }
 
-    private fun buildProjectsGraph(projects: Iterable<ImpactProject>): List<ImpactProject> {
-        val projectsMap = projects.associateBy { (project) -> project }
-        val roots = projects.toMutableSet()
+    fun onProjectEvaluated(project: Project) {
+        val impactProject = projects[project.name] ?: return
 
-        projects.forEach { dependentNode ->
-            var isRemovedFromRoots = false
+        var isRemovedFromRoots = false
 
-            dependentNode.project.configurations
-                .filter { it.name.endsWith("implementation", ignoreCase = true) }
-                .flatMap { configuration ->
-                    configuration.dependencies.withType<ProjectDependency>()
-                        .map { dependency -> configuration to dependency }
+        project.configurations
+            .filter { it.name.endsWith("implementation", ignoreCase = true) }
+            .flatMap { configuration ->
+                configuration.dependencies.withType<ProjectDependency>()
+                    .map { dependency -> configuration to dependency }
+            }
+            .forEach { (configuration, dependency) ->
+                if (!isRemovedFromRoots && !configuration.name.contains("test", ignoreCase = true)) {
+                    roots.remove(impactProject)
+                    isRemovedFromRoots = true
                 }
-                .forEach { (configuration, dependency) ->
-                    if (!isRemovedFromRoots && !configuration.name.contains("test", ignoreCase = true)) {
-                        roots.remove(dependentNode)
-                        isRemovedFromRoots = true
-                    }
 
-                    val dependencyNode = projectsMap.getValue(dependency.dependencyProject)
-                    val dependencyList = dependencyNode.dependentProjects
-                    dependencyList.add(dependentNode)
+                val dependencyNode = projects.getValue(dependency.dependencyProject.name)
+                val dependencyList = dependencyNode.dependentProjects
+                dependencyList.add(impactProject)
+
+                if (dependencyNode.hasChanges) {
+                    impactProject.hasChanges = true
                 }
-        }
-
-        return roots.toList()
+            }
     }
 
     private fun buildProjectsPathTrie(projects: Iterable<ImpactProject>): ProjectPathTrie {

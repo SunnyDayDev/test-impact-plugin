@@ -19,23 +19,16 @@ open class TestImpactTask : DefaultTask() {
     var isRunned: Boolean = false
         private set
 
+    private val graphResolver = ProjectGraphResolver(project)
+
     private val graph: ImpactProjectGraph by lazy {
-        ProjectGraphResolver(project)
-            .getProjectsGraph()
+        graphResolver.getProjectsGraph()
             .also(::markChangedProjects)
-    }
-
-    @TaskAction
-    fun run() {
-
-        isRunned = true
     }
 
     private fun markChangedProjects(graph: ImpactProjectGraph) {
         val changedProjects = changesSource.getChangedFiles()
             .mapNotNullTo(mutableSetOf(), graph::getProjectByRelativePath)
-        // TODO: build tasks graph from roots
-        val changedProjectsRoots = changedProjects.toMutableSet()
 
         val queue = ArrayDeque<ImpactProject>()
         queue.addAll(changedProjects)
@@ -46,8 +39,6 @@ open class TestImpactTask : DefaultTask() {
             project.hasChanges = true
 
             project.dependentProjects.forEach { dependentProject ->
-                changedProjectsRoots.remove(dependentProject)
-
                 if (!dependentProject.hasChanges && changedProjects.add(dependentProject)) {
                     queue.add(dependentProject)
                 }
@@ -55,7 +46,16 @@ open class TestImpactTask : DefaultTask() {
         }
     }
 
+    fun onProjectEvaluated(project: Project) {
+        graphResolver.onProjectEvaluated(project)
+    }
+
     fun hasChanges(target: Project): Boolean {
         return graph.getProjectByName(target.name).hasChanges
+    }
+
+    @TaskAction
+    fun run() {
+        isRunned = true
     }
 }
