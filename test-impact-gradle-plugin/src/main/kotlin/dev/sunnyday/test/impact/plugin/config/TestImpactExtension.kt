@@ -1,14 +1,16 @@
 package dev.sunnyday.test.impact.plugin.config
 
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 
-open class TestImpactConfiguration {
+open class TestImpactExtension {
 
-    @Input
+    @get:Input
     var testTasksNames: List<String> = listOf("test")
 
-    @Input
+    @get:Input
     var unchangedProjectTestStrategy: UnchangedProjectTestStrategy = UnchangedProjectTestStrategy.SKIP_TEST
 
+    @get:Nested
     var changesSource: ChangesSource = ChangesSource(::emptyList)
 }

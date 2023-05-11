@@ -1,15 +1,16 @@
 package dev.sunnyday.test.impact.plugin.graph
 
-internal class ProjectPathTrie {
+import dev.sunnyday.test.impact.plugin.model.ImpactProject
+import java.io.Serializable
 
-    private val root = Node()
+internal class ProjectPathTrie : Serializable {
+
+    private val root = PathNode()
 
     fun add(impactProject: ImpactProject) {
-        val project = impactProject.project
-
-        project.projectDir.relativeTo(project.rootDir).path
+        impactProject.path
             .split("/")
-            .fold(root, Node::add)
+            .fold(root, PathNode::add)
             .markProject(impactProject)
     }
 
@@ -17,7 +18,7 @@ internal class ProjectPathTrie {
         var lastProject: ImpactProject? = null
 
         filePath.split("/").asSequence()
-            .runningFold(root as Node?) { node, partPath -> node?.get(partPath)}
+            .runningFold(root as PathNode?) { node, partPath -> node?.get(partPath)}
             .takeWhile { it != null }
             .mapNotNull { it?.project }
             .forEach { lastProject = it}
@@ -26,21 +27,21 @@ internal class ProjectPathTrie {
     }
 
 
-    private class Node {
-        private val children = mutableMapOf<String, Node>()
+    private class PathNode : Serializable {
+        private val children = mutableMapOf<String, PathNode>()
 
         var project: ImpactProject? = null
             private set
 
-        fun add(pathPart: String): Node {
-            return children.getOrPut(pathPart, ::Node)
+        fun add(pathPart: String): PathNode {
+            return children.getOrPut(pathPart, ::PathNode)
         }
 
         fun markProject(project: ImpactProject) {
             this.project = project
         }
 
-        fun get(pathPart: String): Node? {
+        fun get(pathPart: String): PathNode? {
             return children[pathPart]
         }
     }
