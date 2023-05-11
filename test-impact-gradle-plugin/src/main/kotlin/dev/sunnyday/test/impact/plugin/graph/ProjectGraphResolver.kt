@@ -75,9 +75,9 @@ internal class ProjectGraphResolver(
 
     fun getProjectsGraph(): ImpactProjectGraph {
         return ImpactProjectGraph(
-            roots = roots.toSet(),
-            projects = projects.toMap(),
-            graph = graph.toMap(),
+            roots = roots,
+            projects = projects,
+            graph = graph,
             pathTrie = pathTrie,
         )
     }

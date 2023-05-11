@@ -37,12 +37,8 @@ class TestImpactPlugin : Plugin<Project> {
         return target.tasks.register("testImpact", TestImpactTask::class.java) {
             group = "verification"
 
-            if (!isWrapperTask(target) && !checkIsGradleStartedForTestImpact(target)) {
+            if (!(isWrapperTask(target) || checkIsGradleStartedForTestImpact(target))) {
                 throw IllegalStateException("Currently :testImpact allowed to run only as a gradle start task: ${target.gradle.startParameter.taskNames}")
-            }
-
-            if (!graphResolver.isCompleted) {
-                throw IllegalStateException("Unable to use task before projects evaluation completed")
             }
 
             changesSource = extension.changesSource
