@@ -23,8 +23,10 @@ plugins {
 }
 
 testImpact {
-    testTasksNames = listOf("testDebugUnitTest")
-    unchangedProjectTestStrategy = UnchangedProjectTestStrategy.SKIP_TEST
+    // Later, predefined providers will be added here, such as androidTests("buildType"...)
+    testTaskNameProvider = TestTaskNameProvider {
+        listOf("test")
+    }
     
     // Later, predefined sources will be added here, such as git diff
     changesSource = ChangesSource {
@@ -33,4 +35,16 @@ testImpact {
         )
     }
 }
+```
+
+# Execution
+Currently testImpact requires to be a start task to run properly, otherwise it will be ignored.
+To run all the affected tests, simply run the task, and when it completes, the tasks specified in `testTaskNameProvider` will run.
+```bash
+./gradlew testImpact
+```
+
+To run the specified tests if they are affected, run the tests after the testImpact task.
+```bash
+./gradlew testImpact :subproject:test
 ```
