@@ -1,4 +1,4 @@
-package dev.sunnyday.test.impact.plugin.config
+package dev.sunnyday.test.impact.plugin.extension
 
 import org.gradle.api.tasks.Input
 

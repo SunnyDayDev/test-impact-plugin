@@ -1,24 +1,25 @@
-package dev.sunnyday.test.impact.plugin.graph
+package dev.sunnyday.test.impact.plugin.domain.graph
 
-import dev.sunnyday.test.impact.plugin.model.ImpactProject
+import dev.sunnyday.test.impact.plugin.domain.model.ImpactProject
+import dev.sunnyday.test.impact.plugin.domain.model.ProjectPath
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.kotlin.dsl.withType
 
 internal class ProjectGraphResolver(
-    private val rootProject: Project,
+    rootProject: Project,
 ) {
 
-    private val projects = getProjectsMap()
-    private val roots = projects.values.toMutableSet()
-    private val graph = projects.values.associateWith { mutableListOf<ImpactProject>() }
+    private val projects = getProjectsMap(rootProject)
+    private val roots = projects.values.mapTo(hashSetOf(), ImpactProject::path)
+    private val graph = projects.values.associateTo(hashMapOf()) { it.path to mutableListOf<ProjectPath>() }
     private val pathTrie = buildProjectsPathTrie(projects.values)
 
     var isCompleted: Boolean = false
         private set
 
-    private fun getProjectsMap(): Map<String, ImpactProject> {
-        return buildMap {
+    private fun getProjectsMap(rootProject: Project): Map<String, ImpactProject> {
+        return hashMapOf<String, ImpactProject>().apply {
             val projectsQueue = ArrayDeque<Project>()
             projectsQueue.add(rootProject)
 
@@ -27,23 +28,16 @@ internal class ProjectGraphResolver(
 
                 project.childProjects.values.forEach(projectsQueue::add)
 
-                this[project.name] = ImpactProject(
-                    name = project.name,
-                    path = project.relativePathToRoot,
+                this[project.path] = ImpactProject(
+                    path = project.path,
+                    dirPath = project.relativePathToRoot,
                 )
             }
         }
     }
 
-    fun markChangedProjects(changedFilesPaths: List<String>) {
-        changedFilesPaths
-            .asSequence()
-            .mapNotNull(pathTrie::getProjectByRelativePath)
-            .forEach { project -> project.hasChanges = true }
-    }
-
     fun onProjectEvaluated(project: Project) {
-        val impactProject = projects.getValue(project.name)
+        val impactProject = projects.getValue(project.path)
 
         var isRemovedFromRoots = false
 
@@ -55,22 +49,14 @@ internal class ProjectGraphResolver(
             }
             .forEach { (configuration, dependency) ->
                 if (!isRemovedFromRoots && !configuration.name.contains("test", ignoreCase = true)) {
-                    roots.remove(impactProject)
+                    roots.remove(impactProject.path)
                     isRemovedFromRoots = true
                 }
 
-                val dependencyNode = projects.getValue(dependency.dependencyProject.name)
-                val dependencyList = graph.getValue(dependencyNode)
-                dependencyList.add(impactProject)
-
-                if (!impactProject.hasChanges && dependencyNode.hasChanges) {
-                    impactProject.hasChanges = true
-                }
+                val dependencyNode = projects.getValue(dependency.dependencyProject.path)
+                val dependencyList = graph.getValue(dependencyNode.path)
+                dependencyList.add(impactProject.path)
             }
-    }
-
-    fun hasChanges(project: Project): Boolean {
-        return pathTrie.getProjectByRelativePath(project.relativePathToRoot)?.hasChanges ?: false
     }
 
     fun getProjectsGraph(): ImpactProjectGraph {
@@ -78,7 +64,7 @@ internal class ProjectGraphResolver(
             roots = roots,
             projects = projects,
             graph = graph,
-            pathTrie = pathTrie,
+            filePathTrie = pathTrie,
         )
     }
 
@@ -86,8 +72,8 @@ internal class ProjectGraphResolver(
         isCompleted = true
     }
 
-    private fun buildProjectsPathTrie(projects: Iterable<ImpactProject>): ProjectPathTrie {
-        val trie = ProjectPathTrie()
+    private fun buildProjectsPathTrie(projects: Iterable<ImpactProject>): ProjectFilePathTrie {
+        val trie = ProjectFilePathTrie()
         projects.forEach(trie::add)
         return trie
     }

@@ -1,15 +1,14 @@
-package dev.sunnyday.test.impact.plugin.model
+package dev.sunnyday.test.impact.plugin.domain.model
 
 import java.io.Serializable
 
 internal data class ImpactProject(
-    val name: String,
-    val path: String,
+    val path: ProjectPath,
+    val dirPath: String,
+    var hasChanges: Boolean = false
 ) : Serializable {
 
-    var hasChanges: Boolean = false
-
     override fun toString(): String {
-        return name
+        return path
     }
 }
