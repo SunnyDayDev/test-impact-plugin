@@ -5,14 +5,7 @@ build/
 !**/src/test/**/build/
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/uiDesigner.xml
-.idea/workspace.xml
-.idea/misc.xml
-.idea/libraries/
-.idea/shelf/
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -45,3 +38,5 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+local.properties
