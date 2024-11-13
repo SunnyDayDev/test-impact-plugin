@@ -12,7 +12,7 @@ internal class TestImpactTaskOutput(
 
     fun writeImpactGraph(graph: ImpactProjectGraph) {
         with(file) {
-            if (!exists() && !mkdirs()) {
+            if (!parentFile.exists() && !parentFile.mkdirs()) {
                 throw IOException("Can't create output file directory: $parentFile")
             }
 
