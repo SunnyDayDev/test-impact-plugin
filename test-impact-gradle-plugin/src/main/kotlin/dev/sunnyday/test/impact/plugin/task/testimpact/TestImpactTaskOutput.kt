@@ -11,12 +11,14 @@ internal class TestImpactTaskOutput(
 ) {
 
     fun writeImpactGraph(graph: ImpactProjectGraph) {
-        if (!file.parentFile.mkdirs()) {
-            throw IOException("Can't create output file directory: ${file.parentFile}")
-        }
+        with(file) {
+            if (!parentFile.exists() && !parentFile.mkdirs()) {
+                throw IOException("Can't create output file directory: $parentFile")
+            }
 
-        ObjectOutputStream(file.outputStream()).use { stream ->
-            stream.writeObject(graph)
+            ObjectOutputStream(outputStream()).use { stream ->
+                stream.writeObject(graph)
+            }
         }
     }
 

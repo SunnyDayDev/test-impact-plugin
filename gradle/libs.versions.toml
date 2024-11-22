@@ -2,9 +2,8 @@
 # Versions
 #-----------------
 [versions]
-jdkVersion = "8"
-kotlin = "1.8.21"
-kotlin-dsl = "4.0.14"
+jdkVersion = "21"
+kotlin-dsl = "5.1.2"
 
 #-----------------
 # Libraries

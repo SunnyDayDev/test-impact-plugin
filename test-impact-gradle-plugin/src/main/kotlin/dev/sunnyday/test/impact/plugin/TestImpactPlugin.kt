@@ -1,7 +1,7 @@
 package dev.sunnyday.test.impact.plugin
 
-import dev.sunnyday.test.impact.plugin.extension.TestImpactExtension
 import dev.sunnyday.test.impact.plugin.domain.graph.ProjectGraphResolver
+import dev.sunnyday.test.impact.plugin.extension.TestImpactExtension
 import dev.sunnyday.test.impact.plugin.task.testimpact.TestImpactTask
 import dev.sunnyday.test.impact.plugin.task.testimpact.TestImpactTaskOutput
 import org.gradle.api.Plugin
@@ -143,7 +143,7 @@ class TestImpactPlugin : Plugin<Project> {
         }
 
         private fun getTestImpactOutputFile(): File {
-            return File(target.buildDir, "tmp/testImpact/output.txt")
+            return File(target.layout.buildDirectory.get().asFile, "tmp/testImpact/output.txt")
         }
     }
 }
